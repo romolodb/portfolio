@@ -242,11 +242,16 @@
         }
 
         /* RESPONSIVE */
+
         @media (max-width: 768px) {
             :root { --line-position: 25px; --snake-start-x: 25px; }
             h1.name { font-size: 3rem; }
-            .hero { flex-direction: column; padding-top: 120px;}
-            .hero-content { padding: 0 20px; text-align: center; margin-bottom: 50px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
+            
+            /* -- ECCO LA MODIFICA PER CENTRARE IL TESTO -- */
+            .hero { flex-direction: column; padding-top: 0; justify-content: center; height: 100vh; }
+            .hero-content { padding: 0 20px; text-align: center; margin-bottom: 0; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
+            /* ------------------------------------------- */
+            
             .tagline { display: inline-block; margin-left: 0; margin-right: 0; width: auto; }
             p.bio-short { width: 100%; max-width: 100%; }
             .hero-visual { height: 400px; width: 100%; }
