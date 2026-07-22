@@ -3,35 +3,28 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dentro il Libro — Galleria 360°</title>
+  <title>Dentro il Libro — Galleria VR</title>
 
   <!-- ============================================================
        DENTRO IL LIBRO — Galleria circolare per Meta Quest 3
        ------------------------------------------------------------
-       Le opere sono distribuite in modo EQUIDISTANTE lungo i 360°
-       attorno al visitatore, ciascuna col proprio titolo sotto.
-       Il cerchio ruota lentamente.
-
-       Pizzicando un'opera, questa NON viene spostata: ne compare
-       una copia ingrandita su una "vetrina" che si posiziona
-       sempre perfettamente frontale davanti all'osservatore,
-       con titolo e descrizione sotto. Le opere del cerchio non
-       vengono mai mosse ne' ruotate, quindi non possono restare
-       storte al ritorno.
+       Le immagini fluttuano in cerchio attorno al visitatore e il
+       carosello ruota lentamente in continuo. Selezionando
+       un'opera, questa si avvicina e si ingrandisce, la didascalia
+       appare sotto e le altre opere si attenuano.
 
        COME AGGIUNGERE LE TUE IMMAGINI:
        modifica l'array IMAGES qui sotto (src, title, caption).
-       Le proporzioni di ogni immagine sono rispettate
+       Le proporzioni di ogni immagine vengono rispettate
        automaticamente.
 
        INTERAZIONE:
-       - VISORE (mani):       guarda un'opera e pizzica (pollice +
-                              indice, mano qualsiasi). Un altro
-                              pizzico chiude la vetrina.
-       - VISORE (controller): punta col laser e premi il grilletto
-       - DESKTOP:             click del mouse sull'opera;
-                              frecce sinistra/destra ruotano;
-                              Esc chiude; Invio simula il pinch
+       - VISORE (mani):    guarda un'opera e fai pinch (una mano
+                           qualsiasi) per selezionarla/deselezionarla
+       - VISORE (controller): punta e premi il grilletto
+       - DESKTOP:          click col mouse sull'opera;
+                           frecce <- -> ruotano il carosello;
+                           Esc deseleziona
        ============================================================ -->
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
@@ -73,34 +66,25 @@
   const IMAGES = [
     { src: "img1.png", title: "Immagine 1", caption: "Descrizione dell'immagine" },
     { src: "img2.png", title: "Immagine 2", caption: "Descrizione dell'immagine" },
-    { src: "img3.png", title: "Immagine 3", caption: "Descrizione dell'immagine" },
     // Aggiungi qui le altre opere:
-    // { src: "img4.png", title: "Immagine 4", caption: "..." },
+    // { src: "img3.png", title: "Immagine 3", caption: "..." },
   ];
 
-  // --- Parametri della sala (modificabili) ---
-  const RING_RADIUS    = 3.4;   // distanza delle opere dal visitatore (metri)
-  const EYE_LEVEL      = 1.6;   // quota del centro delle opere
-  const IMG_HEIGHT_MAX = 1.30;  // altezza massima di un'opera nel cerchio
-  const IMG_HEIGHT_MIN = 0.40;  // altezza minima (con moltissime opere)
-  const GAP_MIN_DEG    = 2;     // respiro minimo fra due opere adiacenti (gradi)
-  const SPIN_SPEED     = 0;     // rotazione continua del cerchio (gradi/secondo)
-  const TITLE_GAP      = 0.14;  // distanza del titolo dal bordo dell'opera
-  const DIM_OPACITY    = 0.18;  // quanto si attenua il cerchio con la vetrina aperta
-
-  // --- Vetrina: l'opera portata in primo piano ---
-  const DISPLAY_DIST   = 2.2;   // distanza dall'osservatore (metri)
-  const DISPLAY_HEIGHT = 1.7;   // altezza dell'opera in primo piano
-  const DISPLAY_MAX_W  = 2.8;   // larghezza massima (per immagini panoramiche)
+  const RING_RADIUS   = 3.2;   // distanza delle opere dal centro (metri)
+  const IMG_HEIGHT    = 1.15;  // altezza base di ogni opera (metri)
+  const EYE_LEVEL     = 1.6;   // quota del centro delle opere
+  const SPIN_SPEED    = 0;     // rotazione continua (gradi/secondo)
+  const ZOOM_SCALE    = 1.7;   // ingrandimento dell'opera selezionata
+  const ZOOM_ADVANCE  = 1.25;  // di quanto si avvicina (metri)
   </script>
   <!-- =========================================================== -->
 
   <div id="splash">
     <span class="eyebrow">Galleria immersiva</span>
     <h1 id="splash-title">Dentro il Libro</h1>
-    <p>Le opere ti circondano, ciascuna col suo titolo. Guardane una e unisci
-       pollice e indice: si presenta davanti a te, ingrandita e con la sua
-       descrizione. Ripeti il gesto per tornare alla sala.</p>
+    <p>Le opere ti circondano e ruotano lentamente. Guardane una e unisci
+       pollice e indice per portarla a te; ripeti il gesto per farla
+       tornare al suo posto.</p>
     <button id="enter">Inizia</button>
     <span id="hint">Meta Quest 3 · hand tracking · click col mouse per provare da desktop</span>
   </div>
@@ -113,32 +97,26 @@
     vr-mode-ui="enabled: false"
     loading-screen="enabled: false">
 
-    <!-- Pavimento della sala -->
+    <!-- Pavimento e atmosfera della stanza -->
     <a-circle position="0 0.01 0" rotation="-90 0 0" radius="9"
       color="#14181d" material="shader: flat"></a-circle>
-    <a-ring position="0 0.02 0" rotation="-90 0 0"
-      radius-inner="3.28" radius-outer="3.35"
-      color="#c8a24a" material="shader: flat; opacity: 0.20; transparent: true"></a-ring>
+    <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="3.05" radius-outer="3.12"
+      color="#c8a24a" material="shader: flat; opacity: 0.22; transparent: true"></a-ring>
 
     <!-- Carosello: le opere vengono create qui via JavaScript -->
     <a-entity id="ring"></a-entity>
-
-    <!-- Vetrina: contenitore vuoto. Il suo contenuto viene ricreato ad ogni
-         apertura, cosi' ogni immagine ha un materiale nuovo e non puo' esserci
-         alcun residuo della texture precedente. -->
-    <a-entity id="display" visible="false"></a-entity>
 
     <!-- Rig: camera + mani + controller -->
     <a-entity id="rig" position="0 0 0">
       <a-entity id="camera" camera position="0 1.6 0" look-controls></a-entity>
       <a-entity id="handL" hand-tracking-controls="hand: left; modelColor: #d9d2c2"></a-entity>
       <a-entity id="handR" hand-tracking-controls="hand: right; modelColor: #d9d2c2"></a-entity>
-      <a-entity laser-controls="hand: left"  raycaster="objects: .artwork, .closer" line="color: #c8a24a; opacity: 0.6"></a-entity>
-      <a-entity laser-controls="hand: right" raycaster="objects: .artwork, .closer" line="color: #c8a24a; opacity: 0.6"></a-entity>
+      <a-entity laser-controls="hand: left"  raycaster="objects: .artwork" line="color: #c8a24a; opacity: 0.6"></a-entity>
+      <a-entity laser-controls="hand: right" raycaster="objects: .artwork" line="color: #c8a24a; opacity: 0.6"></a-entity>
     </a-entity>
 
     <!-- Cursore mouse per il test da desktop -->
-    <a-entity cursor="rayOrigin: mouse" raycaster="objects: .artwork, .closer"></a-entity>
+    <a-entity cursor="rayOrigin: mouse" raycaster="objects: .artwork"></a-entity>
   </a-scene>
 
   <script>
@@ -146,22 +124,13 @@
     const $ = (id) => document.getElementById(id);
     const scene = $("scene");
     const THREE_ = AFRAME.THREE;
-    const DEG = 180 / Math.PI;
 
     document.getElementById("splash-title").textContent = EXHIBIT.title;
-    document.title = EXHIBIT.title + " — Galleria 360°";
+    document.title = EXHIBIT.title + " — Galleria VR";
 
     let spinning = true;
-    let selected = null;     // record dell'opera in vetrina
-    const arts = [];         // record: { root, img, frame, titleEl, aspect, item }
-
-    // Le proporzioni servono per il layout: le leggo subito, in parallelo.
-    const aspectsReady = Promise.all(IMAGES.map(item => new Promise(resolve => {
-      const im = new Image();
-      im.onload  = () => resolve(im.naturalWidth / im.naturalHeight);
-      im.onerror = () => resolve(1.4);      // fallback se un file manca
-      im.src = item.src;
-    })));
+    let selected = null;          // entity dell'opera selezionata
+    const artworks = [];          // { el, angleDeg, w, h, capEl }
 
     // ---------- Rotazione continua del carosello ----------
     AFRAME.registerComponent("carousel-spin", {
@@ -172,232 +141,146 @@
     });
     $("ring").setAttribute("carousel-spin", "");
 
-    // Libera davvero la texture dalla memoria GPU prima di sostituirla:
-    // senza questo, un'immagine di dimensioni diverse verrebbe copiata
-    // DENTRO la precedente, lasciandola visibile attorno.
-    function clearTexture(el) {
-      const mesh = el.getObject3D && el.getObject3D("mesh");
-      if (mesh && mesh.material && mesh.material.map) {
-        mesh.material.map.dispose();
-        mesh.material.map = null;
-        mesh.material.needsUpdate = true;
-      }
-    }
-
-    // ---------- Layout: opere equidistanti sui 360° ----------
-    // Ogni opera ha uno "spicchio" di 360/n gradi. L'altezza comune viene
-    // scelta perche' anche l'immagine piu' larga stia nel suo spicchio.
-    function solveHeight(aspects) {
-      const slot = 360 / aspects.length - GAP_MIN_DEG;
-      if (slot <= 1) return IMG_HEIGHT_MIN;
-      const wMax = 2 * RING_RADIUS * Math.tan((slot / 2) / DEG);
-      const h = wMax / Math.max.apply(null, aspects);
-      return Math.min(IMG_HEIGHT_MAX, Math.max(IMG_HEIGHT_MIN, h));
-    }
-
-    async function buildRing() {
-      const aspects = await aspectsReady;
+    // ---------- Creazione delle opere sul cerchio ----------
+    function buildRing() {
       const ring = $("ring");
-      const h = solveHeight(aspects);
-      const step = 360 / IMAGES.length;      // passo angolare costante = disposizione equa
-
+      const n = IMAGES.length;
       IMAGES.forEach((item, i) => {
-        const ang = step * i;                // 0°, 120°, 240° ... sempre equidistanti
-        const rad = ang / DEG;
-        const x = RING_RADIUS * Math.sin(rad);
-        const z = -RING_RADIUS * Math.cos(rad);
-        const w = h * aspects[i];
+        const img = new Image();
+        img.onload = () => {
+          const aspect = img.naturalWidth / img.naturalHeight;
+          const h = IMG_HEIGHT, w = h * aspect;
+          const angle = (360 / n) * i;                    // gradi
+          const rad = THREE_.MathUtils.degToRad(angle);
+          const x = RING_RADIUS * Math.sin(rad);
+          const z = -RING_RADIUS * Math.cos(rad);
 
-        // Contenitore: posizione e orientamento verso il centro. Non viene MAI
-        // ne' spostato ne' ruotato dopo la creazione.
-        const root = document.createElement("a-entity");
-        root.setAttribute("position", `${x} ${EYE_LEVEL} ${z}`);
-        root.setAttribute("rotation", `0 ${-ang} 0`);
+          const el = document.createElement("a-plane");
+          el.classList.add("artwork");
+          el.setAttribute("width", w);
+          el.setAttribute("height", h);
+          el.setAttribute("position", `${x} ${EYE_LEVEL} ${z}`);
+          el.setAttribute("rotation", `0 ${-angle} 0`);   // rivolta verso il centro
+          el.setAttribute("material", `src: ${item.src}; shader: flat; side: double; transparent: true; opacity: 1`);
+          el.dataset.index = i;
 
-        const img = document.createElement("a-plane");
-        img.classList.add("artwork");
-        img.setAttribute("width", w);
-        img.setAttribute("height", h);
-        img.setAttribute("material",
-          `src: ${item.src}; shader: flat; side: double; transparent: true; opacity: 1`);
+          // Cornice sottile dietro l'opera
+          const frame = document.createElement("a-plane");
+          frame.setAttribute("width", w + 0.06);
+          frame.setAttribute("height", h + 0.06);
+          frame.setAttribute("position", "0 0 -0.005");
+          frame.setAttribute("material", "color: #1c2229; shader: flat; side: double");
+          el.appendChild(frame);
 
-        const frame = document.createElement("a-plane");
-        frame.setAttribute("width", w + 0.05);
-        frame.setAttribute("height", h + 0.05);
-        frame.setAttribute("position", "0 0 -0.004");
-        frame.setAttribute("material",
-          "color: #1c2229; shader: flat; side: double; transparent: true; opacity: 1");
-        img.appendChild(frame);
+          // Didascalia (nascosta finche' l'opera non e' selezionata)
+          const cap = document.createElement("a-entity");
+          cap.setAttribute("visible", "false");
+          cap.setAttribute("position", `0 ${-(h / 2 + 0.24)} 0.01`);
+          cap.innerHTML = `
+            <a-plane width="${Math.max(w, 1.1)}" height="0.34" color="#101418"
+              material="opacity: 0.85; transparent: true; shader: flat"></a-plane>
+            <a-text value="${(item.title || "").replace(/"/g, "'")}" align="center"
+              position="0 0.07 0.01" width="${Math.max(w, 1.1) * 1.15}"
+              color="#f5f2ec" wrap-count="34"></a-text>
+            <a-text value="${(item.caption || "").replace(/"/g, "'")}" align="center"
+              position="0 -0.07 0.01" width="${Math.max(w, 1.1) * 0.85}"
+              color="#b9b3a4" wrap-count="52"></a-text>`;
+          el.appendChild(cap);
 
-        // Titolo: sempre visibile sotto l'opera
-        const titleEl = document.createElement("a-text");
-        titleEl.setAttribute("value", item.title || "");
-        titleEl.setAttribute("align", "center");
-        titleEl.setAttribute("color", "#8a8578");
-        titleEl.setAttribute("width", Math.max(w * 0.95, 0.8));
-        titleEl.setAttribute("wrap-count", 26);
-        titleEl.setAttribute("position", `0 ${-(h / 2 + TITLE_GAP)} 0.01`);
+          el.addEventListener("click", () => toggle(el));
+          el.addEventListener("mouseenter", () => { if (el !== selected) setScale(el, 1.05); });
+          el.addEventListener("mouseleave", () => { if (el !== selected) setScale(el, 1.0); });
 
-        root.appendChild(img);
-        root.appendChild(titleEl);
-        ring.appendChild(root);
-
-        const rec = { root, img, frame, titleEl, aspect: aspects[i], item, opacity: 1 };
-        arts.push(rec);
-
-        img.addEventListener("click", () => toggle(rec));
+          ring.appendChild(el);
+          artworks.push({ el, angleDeg: angle, w, h, capEl: cap,
+                          basePos: { x, y: EYE_LEVEL, z } });
+        };
+        img.src = item.src;
       });
     }
 
-    // ---------- Attenuazione delle opere del cerchio ----------
-    function setOpacity(rec, v) {
-      rec.img.setAttribute("material", "opacity", v);
-      rec.frame.setAttribute("material", "opacity", v);
-      rec.titleEl.setAttribute("text", "opacity", v);
-      rec.opacity = v;
-    }
-    function fadeAll(to, ms) {
-      const from = arts.map(r => r.opacity), t0 = performance.now();
-      (function step(t) {
-        const k = Math.min(1, (t - t0) / ms);
-        arts.forEach((r, i) => setOpacity(r, from[i] + (to - from[i]) * k));
-        if (k < 1) requestAnimationFrame(step);
-      })(t0);
+    function setScale(el, s) {
+      el.setAttribute("animation__sc",
+        `property: scale; to: ${s} ${s} ${s}; dur: 220; easing: easeOutQuad`);
     }
 
-    // ---------- Vetrina: sempre frontale davanti all'osservatore ----------
-    function showDisplay(rec) {
-      const display = $("display");
-      const camObj = $("camera").object3D;
+    function artOf(el) { return artworks.find(a => a.el === el); }
 
-      // posizione e direzione REALI dell'osservatore (funziona anche se
-      // nel visore si e' spostato fisicamente rispetto al centro)
-      const camPos = new THREE_.Vector3(); camObj.getWorldPosition(camPos);
-      const fwd = new THREE_.Vector3(); camObj.getWorldDirection(fwd); fwd.negate();
-      fwd.y = 0;                                   // ignoro l'inclinazione della testa
-      if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, -1);
-      fwd.normalize();
-
-      const pos = camPos.clone().add(fwd.multiplyScalar(DISPLAY_DIST));
-      pos.y = camPos.y;                            // all'altezza degli occhi
-
-      display.object3D.position.copy(pos);
-      // ruota solo attorno a Y perche' il piano guardi esattamente l'osservatore
-      display.object3D.rotation.set(
-        0, Math.atan2(camPos.x - pos.x, camPos.z - pos.z), 0);
-
-      // dimensioni rispettando le proporzioni originali
-      let h = DISPLAY_HEIGHT, w = h * rec.aspect;
-      if (w > DISPLAY_MAX_W) { w = DISPLAY_MAX_W; h = w / rec.aspect; }
-
-      clearDisplay();                              // materiale nuovo ogni volta
-
-      const frame = document.createElement("a-plane");
-      frame.setAttribute("width", w + 0.06);
-      frame.setAttribute("height", h + 0.06);
-      frame.setAttribute("position", "0 0 -0.008");
-      frame.setAttribute("material", "color: #1c2229; shader: flat; side: double");
-
-      const img = document.createElement("a-plane");
-      img.classList.add("closer");
-      img.setAttribute("width", w);
-      img.setAttribute("height", h);
-      img.setAttribute("material",
-        `src: ${rec.item.src}; shader: flat; side: double; transparent: true; opacity: 1`);
-      img.addEventListener("click", () => deselect());
-
-      const title = document.createElement("a-text");
-      title.setAttribute("value", rec.item.title || "");
-      title.setAttribute("align", "center");
-      title.setAttribute("color", "#f5f2ec");
-      title.setAttribute("width", Math.max(w * 0.9, 1.2));
-      title.setAttribute("wrap-count", 30);
-      title.setAttribute("position", `0 ${-(h / 2 + 0.18)} 0.01`);
-
-      const capW = Math.min(Math.max(w, 1.4), 3.0);
-      const cap = document.createElement("a-entity");
-      cap.setAttribute("position", `0 ${-(h / 2 + 0.52)} 0.01`);
-      const capBg = document.createElement("a-plane");
-      capBg.setAttribute("width", capW);
-      capBg.setAttribute("height", 0.34);
-      capBg.setAttribute("material",
-        "color: #101418; shader: flat; opacity: 0.85; transparent: true");
-      const capTx = document.createElement("a-text");
-      capTx.setAttribute("value", rec.item.caption || "");
-      capTx.setAttribute("align", "center");
-      capTx.setAttribute("color", "#b9b3a4");
-      capTx.setAttribute("width", capW * 0.85);
-      capTx.setAttribute("wrap-count", 52);
-      capTx.setAttribute("position", "0 0 0.01");
-      cap.appendChild(capBg); cap.appendChild(capTx);
-
-      display.appendChild(frame);
-      display.appendChild(img);
-      display.appendChild(title);
-      display.appendChild(cap);
-
-      display.setAttribute("visible", true);
-      display.setAttribute("animation__in",
-        "property: scale; from: 0.92 0.92 0.92; to: 1 1 1; dur: 260; easing: easeOutQuad");
-    }
-
-    // Svuota la vetrina liberando le texture dalla memoria GPU
-    function clearDisplay() {
-      const display = $("display");
-      while (display.firstChild) {
-        clearTexture(display.firstChild);
-        display.removeChild(display.firstChild);
-      }
-    }
-
-    // ---------- Selezione / chiusura ----------
-    function select(rec) {
+    // ---------- Selezione / deselezione ----------
+    function select(el) {
+      const a = artOf(el); if (!a) return;
       spinning = false;
-      showDisplay(rec);
-      fadeAll(DIM_OPACITY, 320);
-      selected = rec;
+      // avvicina l'opera al centro lungo la sua normale
+      const k = 1 - (ZOOM_ADVANCE / RING_RADIUS);
+      const p = a.basePos;
+      el.setAttribute("animation__pos",
+        `property: position; to: ${p.x * k} ${p.y} ${p.z * k}; dur: 420; easing: easeInOutQuad`);
+      setScale(el, ZOOM_SCALE);
+      a.capEl.setAttribute("visible", "true");
+      // attenua le altre opere
+      artworks.forEach(o => {
+        if (o.el !== el) o.el.setAttribute("animation__op",
+          "property: material.opacity; to: 0.25; dur: 350");
+      });
+      selected = el;
     }
 
     function deselect() {
       if (!selected) return;
-      $("display").setAttribute("visible", false);
-      clearDisplay();
-      fadeAll(1, 320);
+      const a = artOf(selected);
+      const p = a.basePos;
+      selected.setAttribute("animation__pos",
+        `property: position; to: ${p.x} ${p.y} ${p.z}; dur: 420; easing: easeInOutQuad`);
+      setScale(selected, 1.0);
+      a.capEl.setAttribute("visible", "false");
+      artworks.forEach(o => o.el.setAttribute("animation__op",
+        "property: material.opacity; to: 1; dur: 350"));
       selected = null;
       spinning = true;
     }
 
-    function toggle(rec) {
-      if (selected) { deselect(); return; }   // con la vetrina aperta, un gesto la chiude
-      select(rec);
+    function toggle(el) {
+      if (selected === el) { deselect(); return; }
+      if (selected) {
+        // passaggio diretto a un'altra opera
+        const prev = selected;
+        const a = artOf(prev); const p = a.basePos;
+        prev.setAttribute("animation__pos",
+          `property: position; to: ${p.x} ${p.y} ${p.z}; dur: 420; easing: easeInOutQuad`);
+        setScale(prev, 1.0);
+        a.capEl.setAttribute("visible", "false");
+        selected = null;
+      }
+      select(el);
     }
 
-    // ---------- Pinch: seleziona l'opera che stai guardando ----------
+    // ---------- Pinch (mani): seleziona l'opera che stai guardando ----------
     function nearestToGaze() {
       const cam = $("camera").object3D;
-      const dir = new THREE_.Vector3(); cam.getWorldDirection(dir); dir.negate();
+      const dir = new THREE_.Vector3(); cam.getWorldDirection(dir); dir.negate(); // forward
       const camPos = new THREE_.Vector3(); cam.getWorldPosition(camPos);
-      let best = null, bestDot = 0.75;    // soglia: ~40 gradi dal centro dello sguardo
-      arts.forEach(a => {
-        const wp = new THREE_.Vector3(); a.root.object3D.getWorldPosition(wp);
-        const d = wp.sub(camPos).normalize().dot(dir);
-        if (d > bestDot) { bestDot = d; best = a; }
+      let best = null, bestDot = 0.75;   // soglia: ~40 gradi dal centro sguardo
+      artworks.forEach(a => {
+        const wp = new THREE_.Vector3(); a.el.object3D.getWorldPosition(wp);
+        const to = wp.sub(camPos).normalize();
+        const d = to.dot(dir);
+        if (d > bestDot) { bestDot = d; best = a.el; }
       });
       return best;
     }
     function onPinch() {
-      if (selected) { deselect(); return; }
       const target = nearestToGaze();
-      if (target) select(target);
+      if (target) toggle(target);
+      else if (selected) deselect();
     }
     $("handL").addEventListener("pinchended", onPinch);
     $("handR").addEventListener("pinchended", onPinch);
 
-    // ---------- Tastiera (test da desktop) ----------
+    // ---------- Tastiera (test desktop) ----------
     window.addEventListener("keydown", (e) => {
       const ring = $("ring").object3D;
-      if (e.key === "ArrowRight") ring.rotation.y -= THREE_.MathUtils.degToRad(10);
-      if (e.key === "ArrowLeft")  ring.rotation.y += THREE_.MathUtils.degToRad(10);
+      if (e.key === "ArrowRight") ring.rotation.y -= THREE_.MathUtils.degToRad(12);
+      if (e.key === "ArrowLeft")  ring.rotation.y += THREE_.MathUtils.degToRad(12);
       if (e.key === "Escape") deselect();
       if (e.key === "Enter") onPinch();
     });
