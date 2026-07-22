@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dentro il Libro — Galleria VR</title>
+
+  <!-- ============================================================
+       DENTRO IL LIBRO — Galleria circolare per Meta Quest 3
+       ------------------------------------------------------------
+       Le immagini fluttuano in cerchio attorno al visitatore e il
+       carosello ruota lentamente in continuo. Selezionando
+       un'opera, questa si avvicina e si ingrandisce, la didascalia
+       appare sotto e le altre opere si attenuano.
+
+       COME AGGIUNGERE LE TUE IMMAGINI:
+       modifica l'array IMAGES qui sotto (src, title, caption).
+       Le proporzioni di ogni immagine vengono rispettate
+       automaticamente.
+
+       INTERAZIONE:
+       - VISORE (mani):    guarda un'opera e fai pinch (una mano
+                           qualsiasi) per selezionarla/deselezionarla
+       - VISORE (controller): punta e premi il grilletto
+       - DESKTOP:          click col mouse sull'opera;
+                           frecce <- -> ruotano il carosello;
+                           Esc deseleziona
+       ============================================================ -->
+
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+
+  <style>
+    :root{
+      --ink:#101418; --paper:#f5f2ec; --accent:#c8a24a; --muted:#8a8578;
+    }
+    html,body{margin:0;height:100%;background:var(--ink);}
+    #splash{
+      position:fixed; inset:0; z-index:9999;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      background:radial-gradient(ellipse at 50% 30%, #1c2229 0%, #0c0f13 70%);
+      color:var(--paper); font-family:Georgia,'Times New Roman',serif;
+      text-align:center; padding:24px; gap:14px;
+    }
+    #splash .eyebrow{
+      font-family:ui-monospace,Menlo,monospace; font-size:11px; letter-spacing:.35em;
+      text-transform:uppercase; color:var(--accent);
+    }
+    #splash h1{font-size:clamp(28px,6vw,52px); font-weight:400; margin:0; letter-spacing:.02em;}
+    #splash p{max-width:34em; line-height:1.6; color:#cfc9bb; font-size:15px; margin:0;}
+    #enter{
+      margin-top:18px; padding:14px 42px; font-size:16px; letter-spacing:.12em;
+      font-family:ui-monospace,Menlo,monospace; text-transform:uppercase;
+      background:transparent; color:var(--paper); border:1px solid var(--accent);
+      border-radius:999px; cursor:pointer; transition:background .25s,color .25s;
+    }
+    #enter:hover,#enter:focus-visible{background:var(--accent); color:var(--ink); outline:none;}
+    #hint{font-size:12px; color:var(--muted); font-family:ui-monospace,Menlo,monospace;}
+  </style>
+</head>
+<body>
+
+  <!-- ================= CONFIGURAZIONE GALLERIA ================= -->
+  <script>
+  const EXHIBIT = { title: "Dentro il Libro" };
+
+  const IMAGES = [
+    { src: "img1.png", title: "Immagine 1", caption: "Descrizione dell'immagine" },
+    { src: "img2.png", title: "Immagine 2", caption: "Descrizione dell'immagine" },
+    // Aggiungi qui le altre opere:
+    // { src: "img3.png", title: "Immagine 3", caption: "..." },
+  ];
+
+  const RING_RADIUS   = 3.2;   // distanza delle opere dal centro (metri)
+  const IMG_HEIGHT    = 1.15;  // altezza base di ogni opera (metri)
+  const EYE_LEVEL     = 1.6;   // quota del centro delle opere
+  const SPIN_SPEED    = 3;     // rotazione continua (gradi/secondo)
+  const ZOOM_SCALE    = 1.7;   // ingrandimento dell'opera selezionata
+  const ZOOM_ADVANCE  = 1.25;  // di quanto si avvicina (metri)
+  </script>
+  <!-- =========================================================== -->
+
+  <div id="splash">
+    <span class="eyebrow">Galleria immersiva</span>
+    <h1 id="splash-title">Dentro il Libro</h1>
+    <p>Le opere ti circondano e ruotano lentamente. Guardane una e unisci
+       pollice e indice per portarla a te; ripeti il gesto per farla
+       tornare al suo posto.</p>
+    <button id="enter">Inizia</button>
+    <span id="hint">Meta Quest 3 · hand tracking · click col mouse per provare da desktop</span>
+  </div>
+
+  <a-scene
+    id="scene"
+    background="color: #0c0f13"
+    webxr="optionalFeatures: hand-tracking"
+    renderer="colorManagement: true; antialias: true"
+    vr-mode-ui="enabled: false"
+    loading-screen="enabled: false">
+
+    <!-- Pavimento e atmosfera della stanza -->
+    <a-circle position="0 0.01 0" rotation="-90 0 0" radius="9"
+      color="#14181d" material="shader: flat"></a-circle>
+    <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="3.05" radius-outer="3.12"
+      color="#c8a24a" material="shader: flat; opacity: 0.22; transparent: true"></a-ring>
+
+    <!-- Carosello: le opere vengono create qui via JavaScript -->
+    <a-entity id="ring"></a-entity>
+
+    <!-- Rig: camera + mani + controller -->
+    <a-entity id="rig" position="0 0 0">
+      <a-entity id="camera" camera position="0 1.6 0" look-controls></a-entity>
+      <a-entity id="handL" hand-tracking-controls="hand: left; modelColor: #d9d2c2"></a-entity>
+      <a-entity id="handR" hand-tracking-controls="hand: right; modelColor: #d9d2c2"></a-entity>
+      <a-entity laser-controls="hand: left"  raycaster="objects: .artwork" line="color: #c8a24a; opacity: 0.6"></a-entity>
+      <a-entity laser-controls="hand: right" raycaster="objects: .artwork" line="color: #c8a24a; opacity: 0.6"></a-entity>
+    </a-entity>
+
+    <!-- Cursore mouse per il test da desktop -->
+    <a-entity cursor="rayOrigin: mouse" raycaster="objects: .artwork"></a-entity>
+  </a-scene>
+
+  <script>
+  (function () {
+    const $ = (id) => document.getElementById(id);
+    const scene = $("scene");
+    const THREE_ = AFRAME.THREE;
+
+    document.getElementById("splash-title").textContent = EXHIBIT.title;
+    document.title = EXHIBIT.title + " — Galleria VR";
+
+    let spinning = true;
+    let selected = null;          // entity dell'opera selezionata
+    const artworks = [];          // { el, angleDeg, w, h, capEl }
+
+    // ---------- Rotazione continua del carosello ----------
+    AFRAME.registerComponent("carousel-spin", {
+      tick: function (t, dt) {
+        if (!spinning || !dt) return;
+        this.el.object3D.rotation.y += THREE_.MathUtils.degToRad(SPIN_SPEED * dt / 1000);
+      }
+    });
+    $("ring").setAttribute("carousel-spin", "");
+
+    // ---------- Creazione delle opere sul cerchio ----------
+    function buildRing() {
+      const ring = $("ring");
+      const n = IMAGES.length;
+      IMAGES.forEach((item, i) => {
+        const img = new Image();
+        img.onload = () => {
+          const aspect = img.naturalWidth / img.naturalHeight;
+          const h = IMG_HEIGHT, w = h * aspect;
+          const angle = (360 / n) * i;                    // gradi
+          const rad = THREE_.MathUtils.degToRad(angle);
+          const x = RING_RADIUS * Math.sin(rad);
+          const z = -RING_RADIUS * Math.cos(rad);
+
+          const el = document.createElement("a-plane");
+          el.classList.add("artwork");
+          el.setAttribute("width", w);
+          el.setAttribute("height", h);
+          el.setAttribute("position", `${x} ${EYE_LEVEL} ${z}`);
+          el.setAttribute("rotation", `0 ${-angle} 0`);   // rivolta verso il centro
+          el.setAttribute("material", `src: ${item.src}; shader: flat; side: double; transparent: true; opacity: 1`);
+          el.dataset.index = i;
+
+          // Cornice sottile dietro l'opera
+          const frame = document.createElement("a-plane");
+          frame.setAttribute("width", w + 0.06);
+          frame.setAttribute("height", h + 0.06);
+          frame.setAttribute("position", "0 0 -0.005");
+          frame.setAttribute("material", "color: #1c2229; shader: flat; side: double");
+          el.appendChild(frame);
+
+          // Didascalia (nascosta finche' l'opera non e' selezionata)
+          const cap = document.createElement("a-entity");
+          cap.setAttribute("visible", "false");
+          cap.setAttribute("position", `0 ${-(h / 2 + 0.24)} 0.01`);
+          cap.innerHTML = `
+            <a-plane width="${Math.max(w, 1.1)}" height="0.34" color="#101418"
+              material="opacity: 0.85; transparent: true; shader: flat"></a-plane>
+            <a-text value="${(item.title || "").replace(/"/g, "'")}" align="center"
+              position="0 0.07 0.01" width="${Math.max(w, 1.1) * 1.15}"
+              color="#f5f2ec" wrap-count="34"></a-text>
+            <a-text value="${(item.caption || "").replace(/"/g, "'")}" align="center"
+              position="0 -0.07 0.01" width="${Math.max(w, 1.1) * 0.85}"
+              color="#b9b3a4" wrap-count="52"></a-text>`;
+          el.appendChild(cap);
+
+          el.addEventListener("click", () => toggle(el));
+          el.addEventListener("mouseenter", () => { if (el !== selected) setScale(el, 1.05); });
+          el.addEventListener("mouseleave", () => { if (el !== selected) setScale(el, 1.0); });
+
+          ring.appendChild(el);
+          artworks.push({ el, angleDeg: angle, w, h, capEl: cap,
+                          basePos: { x, y: EYE_LEVEL, z } });
+        };
+        img.src = item.src;
+      });
+    }
+
+    function setScale(el, s) {
+      el.setAttribute("animation__sc",
+        `property: scale; to: ${s} ${s} ${s}; dur: 220; easing: easeOutQuad`);
+    }
+
+    function artOf(el) { return artworks.find(a => a.el === el); }
+
+    // ---------- Selezione / deselezione ----------
+    function select(el) {
+      const a = artOf(el); if (!a) return;
+      spinning = false;
+      // avvicina l'opera al centro lungo la sua normale
+      const k = 1 - (ZOOM_ADVANCE / RING_RADIUS);
+      const p = a.basePos;
+      el.setAttribute("animation__pos",
+        `property: position; to: ${p.x * k} ${p.y} ${p.z * k}; dur: 420; easing: easeInOutQuad`);
+      setScale(el, ZOOM_SCALE);
+      a.capEl.setAttribute("visible", "true");
+      // attenua le altre opere
+      artworks.forEach(o => {
+        if (o.el !== el) o.el.setAttribute("animation__op",
+          "property: material.opacity; to: 0.25; dur: 350");
+      });
+      selected = el;
+    }
+
+    function deselect() {
+      if (!selected) return;
+      const a = artOf(selected);
+      const p = a.basePos;
+      selected.setAttribute("animation__pos",
+        `property: position; to: ${p.x} ${p.y} ${p.z}; dur: 420; easing: easeInOutQuad`);
+      setScale(selected, 1.0);
+      a.capEl.setAttribute("visible", "false");
+      artworks.forEach(o => o.el.setAttribute("animation__op",
+        "property: material.opacity; to: 1; dur: 350"));
+      selected = null;
+      spinning = true;
+    }
+
+    function toggle(el) {
+      if (selected === el) { deselect(); return; }
+      if (selected) {
+        // passaggio diretto a un'altra opera
+        const prev = selected;
+        const a = artOf(prev); const p = a.basePos;
+        prev.setAttribute("animation__pos",
+          `property: position; to: ${p.x} ${p.y} ${p.z}; dur: 420; easing: easeInOutQuad`);
+        setScale(prev, 1.0);
+        a.capEl.setAttribute("visible", "false");
+        selected = null;
+      }
+      select(el);
+    }
+
+    // ---------- Pinch (mani): seleziona l'opera che stai guardando ----------
+    function nearestToGaze() {
+      const cam = $("camera").object3D;
+      const dir = new THREE_.Vector3(); cam.getWorldDirection(dir); dir.negate(); // forward
+      const camPos = new THREE_.Vector3(); cam.getWorldPosition(camPos);
+      let best = null, bestDot = 0.75;   // soglia: ~40 gradi dal centro sguardo
+      artworks.forEach(a => {
+        const wp = new THREE_.Vector3(); a.el.object3D.getWorldPosition(wp);
+        const to = wp.sub(camPos).normalize();
+        const d = to.dot(dir);
+        if (d > bestDot) { bestDot = d; best = a.el; }
+      });
+      return best;
+    }
+    function onPinch() {
+      const target = nearestToGaze();
+      if (target) toggle(target);
+      else if (selected) deselect();
+    }
+    $("handL").addEventListener("pinchended", onPinch);
+    $("handR").addEventListener("pinchended", onPinch);
+
+    // ---------- Tastiera (test desktop) ----------
+    window.addEventListener("keydown", (e) => {
+      const ring = $("ring").object3D;
+      if (e.key === "ArrowRight") ring.rotation.y -= THREE_.MathUtils.degToRad(12);
+      if (e.key === "ArrowLeft")  ring.rotation.y += THREE_.MathUtils.degToRad(12);
+      if (e.key === "Escape") deselect();
+      if (e.key === "Enter") onPinch();
+    });
+
+    // ---------- Avvio ----------
+    $("enter").addEventListener("click", () => {
+      $("splash").style.display = "none";
+      buildRing();
+      if (scene.hasLoaded) scene.enterVR();
+      else scene.addEventListener("loaded", () => scene.enterVR());
+    });
+  })();
+  </script>
+</body>
+</html>
